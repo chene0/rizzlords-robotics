@@ -21,18 +21,13 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.RobotLog;
-import org.firstinspires.ftc.robotcore.external.JavaUtil;
-import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -40,14 +35,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.ArrayList;
 
-@Autonomous(name = "Rizzlords Autonomous", group = "Rizzlords")
-public class Rizzlords_Autonomous extends LinearOpMode {
+@Autonomous(name = "Rizzlords Autonomous (Push)", group = "Rizzlords")
+public class Rizzlords_AutonomousPush extends LinearOpMode {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
     AprilTagProcessor myAprilTagProcessor;
@@ -151,7 +141,7 @@ public class Rizzlords_Autonomous extends LinearOpMode {
         telemetry.update();
     }
 
-    private void RunUsingEncoder(DcMotor motor) {
+    private void RunUsingEncoder(DcMotor motor){
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor.setTargetPosition(0);
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -160,15 +150,15 @@ public class Rizzlords_Autonomous extends LinearOpMode {
 
     /**
      * the sequence of movements to move to a medium/small pole and place cone
-     * <p>
+     *
      * trajectory arguments meaning
      * 0 - default trajectory
      * 1 - end left
      * 2 - end middle
      * 3 - end right
      */
-    private void RunSequence() {
-        double blockTravelTime = 1.5 / .3, rightRotation = 2.5 / .3;
+    private void RunSequence(){
+        double blockTravelTime = 1.5/.3, rightRotation = 2.5/.3;
 
 //        moveXY(0, .3, 0);
 //        runtime.reset();
@@ -212,48 +202,11 @@ public class Rizzlords_Autonomous extends LinearOpMode {
 
         moveXY(0, -0.3, 0);
         runtime.reset();
-        while (opModeIsActive() && (runtime.seconds() < 1.3)) {
+        while(opModeIsActive() && (runtime.seconds() < 5)){
             telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
             telemetry.update();
         }
         TerminateMovement();
-
-        moveXY(0, 0, -0.3);
-        runtime.reset();
-        while (opModeIsActive() && (runtime.seconds() < 1.5)) {
-            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
-            telemetry.update();
-        }
-        TerminateMovement();
-
-        moveXY(0, -0.3, 0);
-        runtime.reset();
-        while (opModeIsActive() && (runtime.seconds() < 2)) {
-            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
-            telemetry.update();
-        }
-        TerminateMovement();
-
-        ArmControlPreset(1);
-        ForeArmControlPreset(1);
-        runtime.reset();
-        while (opModeIsActive() && (runtime.seconds() < 5)) {
-            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
-            telemetry.update();
-        }
-
-        HandControl();
-
-        moveXY(0, 0.1, 0);
-        runtime.reset();
-        while (opModeIsActive() && (runtime.seconds() < 4)) {
-            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
-            telemetry.update();
-        }
-        TerminateMovement();
-
-        TerminateMovement();
-
 
 //        ArmControlPreset(0);
 //        runtime.reset();
@@ -268,7 +221,7 @@ public class Rizzlords_Autonomous extends LinearOpMode {
     /**
      * terminates movement
      */
-    private void TerminateMovement() {
+    private void TerminateMovement(){
         moveXY(0, 0, 0);
         sleep(100);
     }
@@ -288,14 +241,16 @@ public class Rizzlords_Autonomous extends LinearOpMode {
 //    }
 
     /**
-     * @param position position = 0: default
-     *                 position = 1: ready to pickup
-     *                 position = 2: pickup
-     *                 position = 3: place
+     *
+     * @param position
+     * position = 0: default
+     * position = 1: ready to pickup
+     * position = 2: pickup
+     * position = 3: place
      */
-    private void ArmControlPreset(int position) {
+    private void ArmControlPreset(int position){
         Arm.setPower(encoderPower);
-        switch (position) {
+        switch(position){
             case 0:
                 telemetry.addData("target pos", 0);
                 telemetry.update();
@@ -321,9 +276,9 @@ public class Rizzlords_Autonomous extends LinearOpMode {
         }
     }
 
-    private void ForeArmControlPreset(int position) {
+    private void ForeArmControlPreset(int position){
         ForeArm.setPower(encoderPower);
-        switch (position) {
+        switch(position){
             case 0:
                 telemetry.addData("target pos", 0);
                 telemetry.update();
@@ -349,7 +304,7 @@ public class Rizzlords_Autonomous extends LinearOpMode {
         }
     }
 
-    private void HandControl() {
+    private void HandControl(){
         Hand.setPosition(Hand.getPosition() == handOpen ? handClosed : handOpen);
     }
 
@@ -378,12 +333,16 @@ public class Rizzlords_Autonomous extends LinearOpMode {
         BottomLeft.setPower(bottomLeft);
     }
 
-    void tagToTelemetry(AprilTagDetection detection) {
+    void tagToTelemetry(AprilTagDetection detection)
+    {
         Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.YXZ, AngleUnit.DEGREES);
 
         telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z * FEET_PER_METER));
+        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x*FEET_PER_METER));
+        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y*FEET_PER_METER));
+        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z*FEET_PER_METER));
+        telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", rot.firstAngle));
+        telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", rot.secondAngle));
+        telemetry.addLine(String.format("Rotation Roll: %.2f degrees", rot.thirdAngle));
     }
 }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.media.Image;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -23,7 +25,9 @@ public class Rizzlords_Teleop extends LinearOpMode {
     private DcMotor Arm;
     private DcMotor ForeArm;
     private Servo Hand;
+    private Servo PlaneServo;
     double handOpen, handClosed;
+    double planeLoad, planeClosed;
 
     private double CurrRotation;
 
@@ -46,12 +50,17 @@ public class Rizzlords_Teleop extends LinearOpMode {
         Arm = hardwareMap.get(DcMotor.class, "Arm1");
         ForeArm = hardwareMap.get(DcMotor.class, "Forearm");
         Hand = hardwareMap.get(Servo.class, "Hand");
+        PlaneServo = hardwareMap.get(Servo.class, "PlaneServo");
         encoderPower = .3;
         RunUsingEncoder(Arm);
         RunUsingEncoder(ForeArm);
         handOpen = 0.3;
         handClosed = 0;
         Hand.setPosition(handOpen);
+
+        planeLoad = 0.5;
+        planeClosed = 0.7;
+        PlaneServo.setPosition(planeLoad);
 
         CurrRotation = 0;
 
@@ -65,6 +74,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
                 ArmControl();
                 ForeArmControl();
                 HandControl();
+                PlaneControl();
                 telemetry.update();
             }
         }
@@ -89,13 +99,14 @@ public class Rizzlords_Teleop extends LinearOpMode {
             armEncoder = 0;
         }
         else if(gamepad1.dpad_left){
-            armEncoder = 65;
+            armEncoder = 0;
         }
         else if(gamepad1.dpad_down){
-            armEncoder = 6;
+            armEncoder = 161;
         }
         else if(gamepad1.dpad_right){
-            armEncoder = 900;
+//            armEncoder = 900;
+//            TEMPORARILY DISABLED
         }
 
         telemetry.addData("Arm Encoder:", armEncoder);
@@ -116,13 +127,14 @@ public class Rizzlords_Teleop extends LinearOpMode {
             foreArmEncoder = 0;
         }
         else if(gamepad1.dpad_left){
-            foreArmEncoder = -665;
+            foreArmEncoder = -580;
         }
         else if(gamepad1.dpad_down){
-            foreArmEncoder = -313;
+            foreArmEncoder = -422;
         }
         else if(gamepad1.dpad_right){
-            foreArmEncoder = -713;
+//            foreArmEncoder = -713;
+//            TEMPORARILY DISABLED
         }
 
         telemetry.addData("Forearm Encoder:", foreArmEncoder);
@@ -144,6 +156,14 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
     }
 
+    private void PlaneControl(){
+        if(gamepad1.b){
+            PlaneServo.setPosition(PlaneServo.getPosition() == planeLoad ? planeClosed : planeLoad);
+            telemetry.addData("current plane position: ", PlaneServo.getPosition());
+            sleep(250);
+        }
+    }
+
     private void WheelControl() {
         double vertical;
         double horizontal;
@@ -153,25 +173,28 @@ public class Rizzlords_Teleop extends LinearOpMode {
         TopLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         BottomLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        double speedDiv = (gamepad1.left_trigger > 0) ? 1 : .5;
-        pivot = gamepad1.right_stick_x * speedDiv;
-        horizontal = gamepad1.left_stick_x * speedDiv;
-        vertical = gamepad1.right_stick_y * speedDiv;
+        double speedDiv;
+        if(gamepad1.left_trigger > 0){
+            speedDiv = 1;
+        } else if(gamepad1.right_trigger > 0){
+            speedDiv = 0.1;
+        } else {
+            speedDiv = 0.5;
+        }
 
-        double topRight = speedDiv * (-pivot + vertical - horizontal);
-        double bottomRight = speedDiv * (-pivot + vertical + horizontal);
-        double topLeft = speedDiv * (pivot + vertical + horizontal);
-        double bottomLeft = speedDiv * (-pivot + vertical + horizontal);
+        double speed = gamepad1.left_stick_y;
+        double turn = gamepad1.right_stick_x;
+        double strafe = -gamepad1.left_stick_x;
 
-//        double topRight = (-pivot - vertical + horizontal);
-//        double bottomRight = 2 * (pivot - vertical - horizontal);
-//        double topLeft = (-pivot - vertical - horizontal);
-//        double bottomLeft = pivot - vertical + horizontal;
+        double topLeft = speed + turn + strafe;
+        double topRight = speed - turn - strafe;
+        double bottomLeft = speed + turn - strafe;
+        double bottomRight = speed - turn + strafe;
 
-        TopRight.setPower(topRight);
-        BottomRight.setPower(bottomRight);
-        TopLeft.setPower(topLeft);
-        BottomLeft.setPower(bottomLeft);
+        TopRight.setPower(speedDiv * topRight);
+        BottomRight.setPower(speedDiv * bottomRight);
+        TopLeft.setPower(speedDiv * topLeft);
+        BottomLeft.setPower(speedDiv * bottomLeft);
 
         telemetry.addData("BottomLeft", bottomLeft);
         telemetry.addData("TopRight", topRight);
