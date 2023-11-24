@@ -116,7 +116,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
             armEncoder = 0;
         }
         else if(gamepad1.dpad_left){
-            armEncoder = 0;
+            armEncoder = -67;
         }
         else if(gamepad1.dpad_down){
             armEncoder = 161;
@@ -144,7 +144,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
             foreArmEncoder = 0;
         }
         else if(gamepad1.dpad_left){
-            foreArmEncoder = -580;
+            foreArmEncoder = -609;
         }
         else if(gamepad1.dpad_down){
             foreArmEncoder = -422;
@@ -194,7 +194,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
         if(gamepad1.left_trigger > 0){
             speedDiv = 1;
         } else if(gamepad1.right_trigger > 0){
-            speedDiv = 0.1;
+            speedDiv = 0.3;
         } else {
             speedDiv = 0.5;
         }

@@ -165,12 +165,13 @@ public class Rizzlords_Autonomous extends LinearOpMode {
      * 3 - end right
      */
     private void RunSequence() {
-        Travel(-0.3, 0, 0, 1.3);
+        Travel(-0.3, 0, 0, 2.4);
 
-        Travel(0, -0.3, 0, 2);
+        Travel(0, 0, -0.14, 2);
 
-        ArmControlPreset(1);
-        ForeArmControlPreset(1);
+        Travel(0, -0.3, 0, 3.5);
+
+        FullArmPreset(2);
 
         runtime.reset();
         while (opModeIsActive() && (runtime.seconds() < 5)) {
@@ -182,7 +183,16 @@ public class Rizzlords_Autonomous extends LinearOpMode {
 
         Travel(0, 0.1, 0, 4);
 
+        FullArmPreset(0);
+
+        Travel(0, -0.1, 0, 4);
+
         TerminateMovement();
+    }
+
+    private void FullArmPreset(int preset){
+        ArmControlPreset(preset);
+        ForeArmControlPreset(preset);
     }
 
     private void Travel(double xVal, double yVal, double rVal, double time){
@@ -234,7 +244,7 @@ public class Rizzlords_Autonomous extends LinearOpMode {
             case 1:
                 telemetry.addData("target pos", 884);
                 telemetry.update();
-                Arm.setTargetPosition(0);
+                Arm.setTargetPosition(-67);
                 break;
             case 2:
                 telemetry.addData("target pos", 6736);
@@ -262,7 +272,7 @@ public class Rizzlords_Autonomous extends LinearOpMode {
             case 1:
                 telemetry.addData("target pos", 884);
                 telemetry.update();
-                ForeArm.setTargetPosition(-580);
+                ForeArm.setTargetPosition(-609);
                 break;
             case 2:
                 telemetry.addData("target pos", 6736);
