@@ -21,18 +21,13 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.RobotLog;
-import org.firstinspires.ftc.robotcore.external.JavaUtil;
-import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -40,14 +35,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.ArrayList;
 
-@Autonomous(name = "LEFT SIDE Rizzlords Autonomous", group = "Rizzlords")
-public class Rizzlords_Autonomous extends LinearOpMode {
+@Autonomous(name = "RIGHT SIDE Rizzlords Autonomous", group = "Rizzlords")
+public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
     AprilTagProcessor myAprilTagProcessor;
@@ -165,7 +155,7 @@ public class Rizzlords_Autonomous extends LinearOpMode {
      * 3 - end right
      */
     private void RunSequence() {
-        Travel(-0.3, 0, 0, 1.3);
+        Travel(0.3, 0, 0, 1.3);
 
         Travel(0, -0.3, 0, 2);
 
