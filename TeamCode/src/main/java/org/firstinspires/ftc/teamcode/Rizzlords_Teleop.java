@@ -71,7 +71,10 @@ public class Rizzlords_Teleop extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 WheelControl();
-                ArmControl();
+                if(!gamepad1.right_bumper && !gamepad1.left_bumper){
+                    ArmControl();
+                }
+                TuneResetEncoder();
                 ForeArmControl();
                 HandControl();
                 PlaneControl();
@@ -85,6 +88,20 @@ public class Rizzlords_Teleop extends LinearOpMode {
         motor.setTargetPosition(0);
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motor.setPower(.1);
+    }
+
+    private void TuneResetEncoder(){
+        if(gamepad1.right_bumper){
+            armEncoder += 1;
+        } else if(gamepad1.left_bumper){
+            armEncoder -= 1;
+        }
+        if(gamepad1.y){
+            Arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            armEncoder = 0;
+            RunUsingEncoder(Arm);
+        }
+        Arm.setTargetPosition(armEncoder);
     }
 
     // arm/forearm control notes
@@ -112,12 +129,12 @@ public class Rizzlords_Teleop extends LinearOpMode {
         telemetry.addData("Arm Encoder:", armEncoder);
         Arm.setPower(encoderPower);
         Arm.setTargetPosition(armEncoder);
-        if (armEncoder < MIN) {
-            armEncoder = MIN;
-        }
-        else if (armEncoder > MAX) {
-            armEncoder = MAX;
-        }
+//        if (armEncoder < MIN) {
+//            armEncoder = MIN;
+//        }
+//        else if (armEncoder > MAX) {
+//            armEncoder = MAX;
+//        }
     }
 
     private void ForeArmControl(){
@@ -140,12 +157,12 @@ public class Rizzlords_Teleop extends LinearOpMode {
         telemetry.addData("Forearm Encoder:", foreArmEncoder);
         ForeArm.setPower(encoderPower);
         ForeArm.setTargetPosition(foreArmEncoder);
-        if (foreArmEncoder < MIN) {
-            foreArmEncoder = MIN;
-        }
-        else if (foreArmEncoder > MAX) {
-            foreArmEncoder = MAX;
-        }
+//        if (foreArmEncoder < MIN) {
+//            foreArmEncoder = MIN;
+//        }
+//        else if (foreArmEncoder > MAX) {
+//            foreArmEncoder = MAX;
+//        }
     }
 
     private void HandControl(){
