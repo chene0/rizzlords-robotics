@@ -128,7 +128,8 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
 
         // initilization blocks, right motor = front right, left motor = front left, arm = back right, hand = back left
         BottomLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+//        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        TopRight.setDirection(DcMotorSimple.Direction.REVERSE);
         HandControl();
 
         /* Actually do something useful */
@@ -155,7 +156,7 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
      * 3 - end right
      */
     private void RunSequence() {
-        Travel(0.3, 0, 0, 2.2);
+        Travel(-0.3, 0, 0, 1.8);
 
         Travel(0, -0.3, 0, 3.5);
 
@@ -294,7 +295,9 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
      * +turn = clockwise
      * -strafe = right
      */
-    private void omnidirectional(double strafe, double speed, double turn) {
+    private void omnidirectional(double turn, double speed, double strafe) {
+//        strafe = strafe * -1;
+
         double topLeft = speed + turn + strafe;
         double topRight = speed - turn - strafe;
         double bottomLeft = speed + turn - strafe;
@@ -304,14 +307,5 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
         BottomRight.setPower(bottomRight);
         TopLeft.setPower(topLeft);
         BottomLeft.setPower(bottomLeft);
-    }
-
-    void tagToTelemetry(AprilTagDetection detection) {
-        Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.YXZ, AngleUnit.DEGREES);
-
-        telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z * FEET_PER_METER));
     }
 }

@@ -37,6 +37,10 @@ public class Rizzlords_Teleop extends LinearOpMode {
     private int foreArmEncoder;
 
 
+    //AUTO VARS
+    private int stageGlobal;
+
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -62,14 +66,21 @@ public class Rizzlords_Teleop extends LinearOpMode {
         planeClosed = 0.7;
         PlaneServo.setPosition(planeLoad);
 
+
+        //AUTO VARS
+        stageGlobal = -1;
+
+
         CurrRotation = 0;
 
         // initilization blocks, right motor = front right, left motor = front left, arm = back right, hand = back left
         BottomLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+//        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        TopRight.setDirection(DcMotorSimple.Direction.REVERSE);
         waitForStart();
         if (opModeIsActive()) {
             while (opModeIsActive()) {
+                //MANUAL
                 WheelControl();
                 if(!gamepad1.right_bumper && !gamepad1.left_bumper){
                     ArmControl();
@@ -78,6 +89,13 @@ public class Rizzlords_Teleop extends LinearOpMode {
                 ForeArmControl();
                 HandControl();
                 PlaneControl();
+
+                //AUTO
+                if(gamepad1.x){
+                    Ape(stageGlobal++);
+                }
+                telemetry.addData("Ape Stage", stageGlobal);
+
                 telemetry.update();
             }
         }
@@ -90,6 +108,164 @@ public class Rizzlords_Teleop extends LinearOpMode {
         motor.setPower(.1);
     }
 
+
+
+    //AUTO
+
+    /**
+     * Describe this function...
+     * +speed = forward
+     * +turn = clockwise
+     * -strafe = right
+     */
+    private void Ape(int stage){
+        //the robot will always be facing the opposite side except when placing pixels
+        switch(stage){
+            case -1:
+                //move back slowly to starting tile
+                //default pos
+                //rotate 90 deg to face opposite side
+                Travel(-0.3, 0, 0, 0.2);
+                break;
+            case 0:
+                //move to front stage
+                Travel(0, 0.3, 0, 5);
+                break;
+            case 1:
+                //move to pixels
+                Travel(0, 0, 0.3, 1);
+                break;
+            case 2:
+                //pickup pos
+                //handcontrol
+                //default pos
+                break;
+            case 3:
+                //move to front stage starting tile
+                break;
+            case 4:
+                //move to tile in front of board (at a moderate speed)
+                break;
+            case 5:
+                //rotate 90 deg to face board
+                //placing pos
+                //hand control
+                stageGlobal = -1;
+                break;
+            default:
+                return;
+        }
+    }
+
+    private void FullArmPreset(int preset){
+        ArmControlPreset(preset);
+        ForeArmControlPreset(preset);
+    }
+
+    private void Travel(double xVal, double yVal, double rVal, double time){
+        moveXY(xVal, yVal, rVal);
+        runtime.reset();
+        while (opModeIsActive() && (runtime.seconds() < time)) {
+            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
+            telemetry.update();
+        }
+        TerminateMovement();
+    }
+
+    /**
+     * terminates movement
+     */
+    private void TerminateMovement() {
+        moveXY(0, 0, 0);
+        sleep(100);
+    }
+    private void ArmControlPreset(int position) {
+        Arm.setPower(encoderPower);
+        switch (position) {
+            case 0:
+                telemetry.addData("target pos", 0);
+                telemetry.update();
+                Arm.setTargetPosition(0);
+                break;
+            case 1:
+                telemetry.addData("target pos", 884);
+                telemetry.update();
+                Arm.setTargetPosition(-67);
+                break;
+            case 2:
+                telemetry.addData("target pos", 6736);
+                telemetry.update();
+                Arm.setTargetPosition(161);
+                break;
+            case 3:
+                telemetry.addData("target pos", 10473);
+                telemetry.update();
+                Arm.setTargetPosition(0);
+                break;
+            default:
+                return;
+        }
+    }
+
+    private void ForeArmControlPreset(int position) {
+        ForeArm.setPower(encoderPower);
+        switch (position) {
+            case 0:
+                telemetry.addData("target pos", 0);
+                telemetry.update();
+                ForeArm.setTargetPosition(0);
+                break;
+            case 1:
+                telemetry.addData("target pos", 884);
+                telemetry.update();
+                ForeArm.setTargetPosition(-609);
+                break;
+            case 2:
+                telemetry.addData("target pos", 6736);
+                telemetry.update();
+                ForeArm.setTargetPosition(-422);
+                break;
+            case 3:
+                telemetry.addData("target pos", 10473);
+                telemetry.update();
+                ForeArm.setTargetPosition(0);
+                break;
+            default:
+                return;
+        }
+    }
+
+    private void HandControlAuto() {
+        Hand.setPosition(Hand.getPosition() == handOpen ? handClosed : handOpen);
+    }
+
+    private void moveXY(double xVal, double yVal, double rVal) {
+        omnidirectional(xVal, yVal, rVal);
+    }
+
+    /**
+     * Describe this function...
+     * +speed = forward
+     * +turn = clockwise
+     * -strafe = right
+     */
+    private void omnidirectional(double turn, double speed, double strafe) {
+//        strafe = strafe * -1;
+
+        double topLeft = speed + turn + strafe;
+        double topRight = speed - turn - strafe;
+        double bottomLeft = speed + turn - strafe;
+        double bottomRight = speed - turn + strafe;
+
+        TopRight.setPower(topRight);
+        BottomRight.setPower(bottomRight);
+        TopLeft.setPower(topLeft);
+        BottomLeft.setPower(bottomLeft);
+    }
+
+
+
+    //MANUAL
     private void TuneResetEncoder(){
         if(gamepad1.right_bumper){
             armEncoder += 1;
@@ -200,8 +376,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
 
         double speed = gamepad1.left_stick_y;
-        double turn = gamepad1.right_stick_x;
-        double strafe = -gamepad1.left_stick_x;
+        double turn = gamepad1.left_stick_x;
+        double strafe = -gamepad1.right_stick_x;
 
         double topLeft = speed + turn + strafe;
         double topRight = speed - turn - strafe;
