@@ -93,8 +93,8 @@ public class Rizzlords_Autonomous extends LinearOpMode {
         Hand = hardwareMap.get(Servo.class, "Hand");
         CameraServo = hardwareMap.get(Servo.class, "CameraServo");
         encoderPower = .3;
-        handOpen = 0.3;
-        handClosed = 0;
+        handOpen = 1;
+        handClosed = 0.7;
         RunUsingEncoder(Arm);
         RunUsingEncoder(ForeArm);
 
@@ -134,7 +134,7 @@ public class Rizzlords_Autonomous extends LinearOpMode {
      * 3 - end right
      */
     private void RunSequence() {
-        Travel(0.3, 0, 0, 1.8);
+        Travel(0.3, 0, 0, 1.5);
 
         Travel(0, -0.3, 0, 3.5);
 
@@ -147,6 +147,11 @@ public class Rizzlords_Autonomous extends LinearOpMode {
         }
 
         HandControl();
+        runtime.reset();
+        while (opModeIsActive() && (runtime.seconds() < 1)) {
+            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
+            telemetry.update();
+        }
 
         Travel(0, 0.1, 0, 4);
 

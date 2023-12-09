@@ -58,8 +58,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
         encoderPower = .3;
         RunUsingEncoder(Arm);
         RunUsingEncoder(ForeArm);
-        handOpen = 0.3;
-        handClosed = 0;
+        handOpen = 1;//TODO
+        handClosed = 0.7;
         Hand.setPosition(handOpen);
 
         planeLoad = 0.5;
@@ -88,13 +88,9 @@ public class Rizzlords_Teleop extends LinearOpMode {
                 TuneResetEncoder();
                 ForeArmControl();
                 HandControl();
+                HandRecalibrate();
                 PlaneControl();
-
-                //AUTO
-                if(gamepad1.x){
-                    Ape(stageGlobal++);
-                }
-                telemetry.addData("Ape Stage", stageGlobal);
+                telemetry.addData("Hand Position", Hand.getPosition());
 
                 telemetry.update();
             }
@@ -118,44 +114,44 @@ public class Rizzlords_Teleop extends LinearOpMode {
      * +turn = clockwise
      * -strafe = right
      */
-    private void Ape(int stage){
-        //the robot will always be facing the opposite side except when placing pixels
-        switch(stage){
-            case -1:
-                //move back slowly to starting tile
-                //default pos
-                //rotate 90 deg to face opposite side
-                Travel(-0.3, 0, 0, 0.2);
-                break;
-            case 0:
-                //move to front stage
-                Travel(0, 0.3, 0, 5);
-                break;
-            case 1:
-                //move to pixels
-                Travel(0, 0, 0.3, 1);
-                break;
-            case 2:
-                //pickup pos
-                //handcontrol
-                //default pos
-                break;
-            case 3:
-                //move to front stage starting tile
-                break;
-            case 4:
-                //move to tile in front of board (at a moderate speed)
-                break;
-            case 5:
-                //rotate 90 deg to face board
-                //placing pos
-                //hand control
-                stageGlobal = -1;
-                break;
-            default:
-                return;
-        }
-    }
+//    private void Ape(int stage){
+//        //the robot will always be facing the opposite side except when placing pixels
+//        switch(stage){
+//            case -1:
+//                //move back slowly to starting tile
+//                //default pos
+//                //rotate 90 deg to face opposite side
+//                Travel(-0.3, 0, 0, 0.2);
+//                break;
+//            case 0:
+//                //move to front stage
+//                Travel(0, 0.3, 0, 5);
+//                break;
+//            case 1:
+//                //move to pixels
+//                Travel(0, 0, 0.3, 1);
+//                break;
+//            case 2:
+//                //pickup pos
+//                //handcontrol
+//                //default pos
+//                break;
+//            case 3:
+//                //move to front stage starting tile
+//                break;
+//            case 4:
+//                //move to tile in front of board (at a moderate speed)
+//                break;
+//            case 5:
+//                //rotate 90 deg to face board
+//                //placing pos
+//                //hand control
+//                stageGlobal = -1;
+//                break;
+//            default:
+//                return;
+//        }
+//    }
 
     private void FullArmPreset(int preset){
         ArmControlPreset(preset);
@@ -345,6 +341,17 @@ public class Rizzlords_Teleop extends LinearOpMode {
         if(gamepad1.a){
             Hand.setPosition(Hand.getPosition() == handOpen ? handClosed : handOpen);
             telemetry.addData("current hand position: ", Hand.getPosition());
+            sleep(250);
+        }
+    }
+
+    private void HandRecalibrate(){
+        if(gamepad1.x){
+            // handOpen = 0
+            int state = (Hand.getPosition() == handOpen) ? 0 : 1;
+            handOpen -= 0.0025;
+            handClosed -= 0.0025;
+            Hand.setPosition(state == 0 ? handOpen : handClosed);
             sleep(250);
         }
     }
