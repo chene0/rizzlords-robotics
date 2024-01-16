@@ -132,24 +132,6 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
         RunUsingEncoder(Arm);
         RunUsingEncoder(ForeArm);
 
-        imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters myIMUparameters;
-
-        myIMUparameters = new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-                )
-        );
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.FORWARD;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
-
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
-
-        // Now initialize the IMU with this mounting orientation
-        // Note: if you choose two conflicting directions, this initialization will cause a code exception.
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-
         CurrRotation = 0;
 
         // initilization blocks, right motor = front right, left motor = front left, arm = back right, hand = back left

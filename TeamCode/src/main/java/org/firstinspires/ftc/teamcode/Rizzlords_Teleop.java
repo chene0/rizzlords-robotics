@@ -114,7 +114,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 //MANUAL
-                WheelControl();
+//                WheelControl();
+                MecanumInput();
                 if(!gamepad1.right_bumper && !gamepad1.left_bumper){
                     ArmControl();
                 }
@@ -348,10 +349,6 @@ public class Rizzlords_Teleop extends LinearOpMode {
         else if(gamepad1.dpad_down){
             armEncoder = 161;
         }
-        else if(gamepad1.dpad_right){
-//            armEncoder = 900;
-//            TEMPORARILY DISABLED
-        }
 
         telemetry.addData("Arm Encoder:", armEncoder);
         Arm.setPower(encoderPower);
@@ -375,10 +372,6 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
         else if(gamepad1.dpad_down){
             foreArmEncoder = -422;
-        }
-        else if(gamepad1.dpad_right){
-//            foreArmEncoder = -713;
-//            TEMPORARILY DISABLED
         }
 
         telemetry.addData("Forearm Encoder:", foreArmEncoder);
