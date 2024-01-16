@@ -51,6 +51,11 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +80,6 @@ public class Rizzlords_Autonomous extends LinearOpMode {
     private int foreArmEncoder;
     private double handOpen;
     private double handClosed;
-
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.

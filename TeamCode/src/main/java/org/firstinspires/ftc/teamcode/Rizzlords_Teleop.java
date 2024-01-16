@@ -7,9 +7,15 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp(name = "Rizzlords_Teleop", group = "Rizzlords")
 public class Rizzlords_Teleop extends LinearOpMode {
@@ -39,6 +45,11 @@ public class Rizzlords_Teleop extends LinearOpMode {
 
     //AUTO VARS
     private int stageGlobal;
+
+    double refAngAdj, refAngOriginal, refAng;
+
+
+    IMU imu;
 
 
     @Override
@@ -70,6 +81,28 @@ public class Rizzlords_Teleop extends LinearOpMode {
         //AUTO VARS
         stageGlobal = -1;
 
+        imu = hardwareMap.get(IMU.class, "imu");
+        IMU.Parameters myIMUparameters;
+
+        myIMUparameters = new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                        RevHubOrientationOnRobot.UsbFacingDirection.UP
+                )
+        );
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+        // Now initialize the IMU with this mounting orientation
+        // Note: if you choose two conflicting directions, this initialization will cause a code exception.
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        refAngAdj = Math.PI/2;
+        refAngOriginal = orientation.getYaw(AngleUnit.RADIANS);
+        refAng = refAngOriginal + refAngAdj;
 
         CurrRotation = 0;
 
@@ -88,9 +121,31 @@ public class Rizzlords_Teleop extends LinearOpMode {
                 TuneResetEncoder();
                 ForeArmControl();
                 HandControl();
-                HandRecalibrate();
                 PlaneControl();
                 telemetry.addData("Hand Position", Hand.getPosition());
+
+                // Retrieve Rotational Angles and Velocities
+
+                AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+
+                if(gamepad1.x){
+                    refAngAdj *= -1;
+                    refAng = refAngOriginal + refAngAdj;
+                }
+
+                // TODO: console log feedback for which directions the refAng is
+                if(refAngAdj > 0){
+                    telemetry.addData("<", "----");
+                } else{
+                    telemetry.addData("----", ">");
+                }
+
+                telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+                telemetry.addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
+                telemetry.addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
+//                telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
+//                telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
+//                telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
 
                 telemetry.update();
             }
@@ -345,17 +400,6 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
     }
 
-    private void HandRecalibrate(){
-        if(gamepad1.x){
-            // handOpen = 0
-            int state = (Hand.getPosition() == handOpen) ? 0 : 1;
-            handOpen -= 0.0025;
-            handClosed -= 0.0025;
-            Hand.setPosition(state == 0 ? handOpen : handClosed);
-            sleep(250);
-        }
-    }
-
     private void PlaneControl(){
         if(gamepad1.b){
             PlaneServo.setPosition(PlaneServo.getPosition() == planeLoad ? planeClosed : planeLoad);
@@ -400,5 +444,65 @@ public class Rizzlords_Teleop extends LinearOpMode {
         telemetry.addData("TopRight", topRight);
         telemetry.addData("TopLeft", topLeft);
         telemetry.addData("bottomRight", bottomRight);
+    }
+
+    private void MecanumInput(){
+//        double y = gamepad1.left_stick_y;
+//        double turn = gamepad1.left_stick_x;
+//        double x = -gamepad1.right_stick_x;
+
+        double x = gamepad1.left_stick_x;
+        double y = -gamepad1.left_stick_y;
+        double turn = gamepad1.right_stick_x;
+
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        double currRot = orientation.getYaw(AngleUnit.RADIANS);
+        double deltaFromRef = currRot - refAng;
+        double input = Math.atan2(y, x);
+        double theta = -deltaFromRef + input;
+
+        double power = Math.hypot(x, y);
+
+        MecanumAng(theta, power, turn);
+    }
+
+    private void MecanumAng(double theta, double power, double turn){
+
+        TopRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        BottomRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        TopLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        BottomLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        double speedDiv;
+        if(gamepad1.left_trigger > 0){
+            speedDiv = 1;
+        } else if(gamepad1.right_trigger > 0){
+            speedDiv = 0.3;
+        } else {
+            speedDiv = 0.5;
+        }
+
+        double sin = Math.sin(theta - Math.PI/4);
+        double cos = Math.cos(theta - Math.PI/4);
+        double max = Math.max(Math.abs(sin), Math.abs(cos));
+
+        //TODO: power control
+
+        double leftFront = power * cos/max + turn;
+        double rightFront = power * sin/max - turn;
+        double leftRear = power * sin/max + turn;
+        double rightRear = power * cos/max - turn;
+
+        if((power + Math.abs(turn)) > 1){
+            leftFront /= power + turn;
+            rightFront /= power + turn;
+            leftRear /= power + turn;
+            rightRear /= power + turn;
+        }
+
+        TopRight.setPower(speedDiv * rightFront);
+        BottomRight.setPower(speedDiv * rightRear);
+        TopLeft.setPower(speedDiv * leftFront);
+        BottomLeft.setPower(speedDiv * leftRear);
     }
 }

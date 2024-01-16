@@ -28,42 +28,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.openftc.apriltag.AprilTagDetection;
-import org.openftc.easyopencv.OpenCvCamera;
-
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.hardware.IMU;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-
-@Autonomous(name = "RIGHT SIDE Rizzlords Autonomous", group = "Rizzlords")
-public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
-    OpenCvCamera camera;
-    AprilTagDetectionPipeline aprilTagDetectionPipeline;
-    AprilTagProcessor myAprilTagProcessor;
-
-    static final double FEET_PER_METER = 3.28084;
-
-    // Lens intrinsics
-    // UNITS ARE PIXELS
-    // NOTE: this calibration is for the C920 webcam at 800x448.
-    // You will need to do your own calibration for other configurations!
-    double fx = 578.272;
-    double fy = 578.272;
-    double cx = 402.145;
-    double cy = 221.506;
-
-    // UNITS ARE METERS
-    double tagsize = 0.166;
-
-    int ID_TAG_OF_INTEREST = 18; // Tag ID 18 from the 36h11 family
-
-    AprilTagDetection tagOfInterest = null;
+@Autonomous(name = "BACKSTAGE Right SIDE Rizzlords Autonomous", group = "Rizzlords")
+public class Rizzlords_BackstageRightSideAutonomous extends LinearOpMode {
 
     private DcMotor TopRight;
     private DcMotor BottomRight;
@@ -73,6 +39,7 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
     private DcMotor Arm;
     private DcMotor ForeArm;
     private Servo Hand;
+    private Servo CameraServo;
 
     private double CurrRotation;
 
@@ -84,39 +51,11 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
     private double handClosed;
 
 
-    IMU imu;
-
-
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
      */
     @Override
     public void runOpMode() {
-
-        //april tag stuff
-//        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-//        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-//        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-//
-//        camera.setPipeline(aprilTagDetectionPipeline);
-//        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-//        {
-//            @Override
-//            public void onOpened()
-//            {
-//                camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
-//            }
-//
-//            @Override
-//            public void onError(int errorCode)
-//            {
-//
-//            }
-//        });
-
-        // Create the AprilTag processor and assign it to a variable.
-        myAprilTagProcessor = AprilTagProcessor.easyCreateWithDefaults();
-
         telemetry.setMsTransmissionInterval(50);
         TopRight = hardwareMap.get(DcMotor.class, "Top Right");
         BottomRight = hardwareMap.get(DcMotor.class, "Bottom Right");
@@ -126,37 +65,24 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
         Arm = hardwareMap.get(DcMotor.class, "Arm1");
         ForeArm = hardwareMap.get(DcMotor.class, "Forearm");
         Hand = hardwareMap.get(Servo.class, "Hand");
+        CameraServo = hardwareMap.get(Servo.class, "CameraServo");
         encoderPower = .3;
         handOpen = 1;
         handClosed = 0.7;
         RunUsingEncoder(Arm);
         RunUsingEncoder(ForeArm);
 
-        imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters myIMUparameters;
-
-        myIMUparameters = new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-                )
-        );
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.FORWARD;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
-
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
-
-        // Now initialize the IMU with this mounting orientation
-        // Note: if you choose two conflicting directions, this initialization will cause a code exception.
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-
         CurrRotation = 0;
 
-        // initilization blocks, right motor = front right, left motor = front left, arm = back right, hand = back left
         BottomLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 //        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         TopRight.setDirection(DcMotorSimple.Direction.REVERSE);
         HandControl();
+
+        // Wait for the DS start button to be touched.
+        telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
+        telemetry.addData(">", "Touch Play to start OpMode");
+        telemetry.update();
 
         /* Actually do something useful */
         waitForStart();
@@ -182,7 +108,17 @@ public class Rizzlords_Autonomous_LEFT extends LinearOpMode {
      * 3 - end right
      */
     private void RunSequence() {
-        Travel(-0.3, 0, 0, 1.8);
+        runtime.reset();
+        while (opModeIsActive() && (runtime.seconds() < 10)) {
+            telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());
+            telemetry.update();
+        }
+
+        Travel(-0.3, 0, 0, 3.5);
+
+        Travel(0, -.7, 0, .5);
+
+        Travel(0.3, 0, 0, 1.8);
 
         Travel(0, -0.3, 0, 3.5);
 
