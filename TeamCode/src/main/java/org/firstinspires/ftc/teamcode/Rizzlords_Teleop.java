@@ -30,6 +30,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
     //Arm and Hand Motors
     private DcMotor Arm;
     private DcMotor ForeArm;
+    private DcMotor HangArm;
     private Servo Hand;
     private Servo PlaneServo;
     double handOpen, handClosed;
@@ -65,10 +66,12 @@ public class Rizzlords_Teleop extends LinearOpMode {
         Arm = hardwareMap.get(DcMotor.class, "Arm1");
         ForeArm = hardwareMap.get(DcMotor.class, "Forearm");
         Hand = hardwareMap.get(Servo.class, "Hand");
+        HangArm = hardwareMap.get(DcMotor.class, "HangArm");
         PlaneServo = hardwareMap.get(Servo.class, "PlaneServo");
         encoderPower = .3;
         RunUsingEncoder(Arm);
         RunUsingEncoder(ForeArm);
+        RunUsingEncoder(HangArm);
         handOpen = 1;//TODO
         handClosed = 0.7;
         Hand.setPosition(handOpen);
@@ -106,16 +109,21 @@ public class Rizzlords_Teleop extends LinearOpMode {
 
         CurrRotation = 0;
 
-        // initilization blocks, right motor = front right, left motor = front left, arm = back right, hand = back left
         BottomLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-//        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         TopRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
+
+//        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+//        BottomRight.setDirection(DcMotorSimple.Direction.REVERSE);
         waitForStart();
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 //MANUAL
 //                WheelControl();
-                MecanumInput();
+                AbsoluteDrive();
+//                MecanumInput();
+//                MecanumInputRelative();
                 if(!gamepad1.right_bumper && !gamepad1.left_bumper){
                     ArmControl();
                 }
@@ -123,10 +131,12 @@ public class Rizzlords_Teleop extends LinearOpMode {
                 ForeArmControl();
                 HandControl();
                 PlaneControl();
+                HangControl();
                 telemetry.addData("Hand Position", Hand.getPosition());
 
                 // Retrieve Rotational Angles and Velocities
 
+                orientation = imu.getRobotYawPitchRollAngles();
                 AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
 
                 if(gamepad1.x){
@@ -231,6 +241,18 @@ public class Rizzlords_Teleop extends LinearOpMode {
         moveXY(0, 0, 0);
         sleep(100);
     }
+
+    private void HangControl(){
+        int raised = 0;
+        int retracted = 0;
+        boolean isRaised = false;
+        if(gamepad1.dpad_right){
+            HangArm.setTargetPosition(isRaised ? retracted : raised);
+            isRaised = isRaised ? false : true;
+//            telemetry.addData("current hand position: ", Hand.getPosition());
+            sleep(250);
+        }
+    }
     private void ArmControlPreset(int position) {
         Arm.setPower(encoderPower);
         switch (position) {
@@ -286,6 +308,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
                 return;
         }
     }
+
+
 
     private void HandControlAuto() {
         Hand.setPosition(Hand.getPosition() == handOpen ? handClosed : handOpen);
@@ -401,6 +425,118 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
     }
 
+//    private void AbsoluteDrive(){
+//        double vertical;
+//        double horizontal;
+//        double pivot;
+//        TopRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        BottomRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        TopLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        BottomLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//
+//        double speedDiv;
+//        if(gamepad1.left_trigger > 0){
+//            speedDiv = 1;
+//        } else if(gamepad1.right_trigger > 0){
+//            speedDiv = 0.3;
+//        } else {
+//            speedDiv = 0.5;
+//        }
+//
+//        double speedI = gamepad1.left_stick_y;
+//        double turnI = gamepad1.left_stick_x;
+//        double strafe = -gamepad1.right_stick_x;
+//
+//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+//        double currRot = orientation.getYaw(AngleUnit.RADIANS);
+//        double theta = currRot - refAng;
+//        double speed = speedI * Math.cos(Math.PI/2 - theta) + turnI * Math.sin(theta);
+//        double turn = turnI * Math.cos(theta) + speed * Math.sin(Math.PI/2 - theta);
+//
+//        if(speed > 1){
+//            speed = speedI * Math.cos(Math.PI/2 - theta) - turnI * Math.sin(theta);
+//        }
+//
+//        if(turn > 1){
+//            turn = turnI * Math.cos(theta) - speed * Math.sin(Math.PI/2 - theta);
+//        }
+//
+//        telemetry.addData("speed", speed);
+//        telemetry.addData("strafe", turn);
+//
+//        double topLeft = speed + turn + strafe;
+//        double topRight = speed - turn - strafe;
+//        double bottomLeft = speed + turn - strafe;
+//        double bottomRight = speed - turn + strafe;
+//
+//        TopRight.setPower(speedDiv * topRight);
+//        BottomRight.setPower(speedDiv * bottomRight);
+//        TopLeft.setPower(speedDiv * topLeft);
+//        BottomLeft.setPower(speedDiv * bottomLeft);
+//
+////        telemetry.addData("BottomLeft", bottomLeft);
+////        telemetry.addData("TopRight", topRight);
+////        telemetry.addData("TopLeft", topLeft);
+////        telemetry.addData("bottomRight", bottomRight);
+//    }
+
+    private void AbsoluteDrive(){
+        double vertical;
+        double horizontal;
+        double pivot;
+        TopRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        BottomRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        TopLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        BottomLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        double speedDiv;
+        if(gamepad1.left_trigger > 0){
+            speedDiv = 1;
+        } else if(gamepad1.right_trigger > 0){
+            speedDiv = 0.3;
+        } else {
+            speedDiv = 0.5;
+        }
+
+        double speedI = gamepad1.left_stick_y;
+        double turnI = gamepad1.left_stick_x;
+        double strafe = -gamepad1.right_stick_x;
+
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        double currRot = orientation.getYaw(AngleUnit.RADIANS);
+        double theta = currRot - refAng;
+        double radius = Math.sqrt(Math.pow(speedI, 2) + Math.pow(turnI, 2));
+
+        double speed = Math.sin(theta + Math.atan2(speedI, turnI)) * radius;
+        double turn = Math.cos(theta + Math.atan2(speedI, turnI)) * radius;
+
+        if(speed > 1){
+            speed = speedI * Math.cos(Math.PI/2 - theta) - turnI * Math.sin(theta);
+        }
+
+        if(turn > 1){
+            turn = turnI * Math.cos(theta) - speed * Math.sin(Math.PI/2 - theta);
+        }
+
+        telemetry.addData("speed", speed);
+        telemetry.addData("strafe", turn);
+
+        double topLeft = speed + turn + strafe;
+        double topRight = speed - turn - strafe;
+        double bottomLeft = speed + turn - strafe;
+        double bottomRight = speed - turn + strafe;
+
+        TopRight.setPower(speedDiv * topRight);
+        BottomRight.setPower(speedDiv * bottomRight);
+        TopLeft.setPower(speedDiv * topLeft);
+        BottomLeft.setPower(speedDiv * bottomLeft);
+
+//        telemetry.addData("BottomLeft", bottomLeft);
+//        telemetry.addData("TopRight", topRight);
+//        telemetry.addData("TopLeft", topLeft);
+//        telemetry.addData("bottomRight", bottomRight);
+    }
+
     private void WheelControl() {
         double vertical;
         double horizontal;
@@ -440,21 +576,45 @@ public class Rizzlords_Teleop extends LinearOpMode {
     }
 
     private void MecanumInput(){
-//        double y = gamepad1.left_stick_y;
-//        double turn = gamepad1.left_stick_x;
-//        double x = -gamepad1.right_stick_x;
+        double y = gamepad1.left_stick_y;
+        double turn = gamepad1.left_stick_x;
+        double x = -gamepad1.right_stick_x;
 
-        double x = gamepad1.left_stick_x;
-        double y = -gamepad1.left_stick_y;
-        double turn = gamepad1.right_stick_x;
+//        double x = gamepad1.left_stick_x;
+//        double y = -gamepad1.left_stick_y;
+//        double turn = gamepad1.right_stick_x;
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         double currRot = orientation.getYaw(AngleUnit.RADIANS);
         double deltaFromRef = currRot - refAng;
-        double input = Math.atan2(y, x);
+        telemetry.addData("deltaFromRef:", deltaFromRef);
+
+        double input = Math.atan2(y, x) - Math.PI;
         double theta = -deltaFromRef + input;
 
+        telemetry.addData("theta:", theta);
+
         double power = Math.hypot(x, y);
+
+        MecanumAng(theta, power, turn);
+    }
+
+    private void MecanumInputRelative(){
+        double x = -gamepad1.left_stick_x;
+        double y = -gamepad1.left_stick_y;
+        double turn = gamepad1.right_stick_x;
+
+//        double y = gamepad1.left_stick_y;
+//        double turn = gamepad1.left_stick_x;
+//        double x = -gamepad1.right_stick_x;
+
+        telemetry.addData("x:", x);
+        telemetry.addData("y:", y);
+
+        double theta = Math.atan2(y, x);
+        double power = Math.hypot(x, y);
+
+        telemetry.addData("theta:", theta);
 
         MecanumAng(theta, power, turn);
     }
@@ -479,12 +639,12 @@ public class Rizzlords_Teleop extends LinearOpMode {
         double cos = Math.cos(theta - Math.PI/4);
         double max = Math.max(Math.abs(sin), Math.abs(cos));
 
-        //TODO: power control
-
         double leftFront = power * cos/max + turn;
         double rightFront = power * sin/max - turn;
         double leftRear = power * sin/max + turn;
         double rightRear = power * cos/max - turn;
+
+        //TODO: speedDiv control
 
         if((power + Math.abs(turn)) > 1){
             leftFront /= power + turn;

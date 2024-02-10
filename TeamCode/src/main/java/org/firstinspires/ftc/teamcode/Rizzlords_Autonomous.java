@@ -81,6 +81,10 @@ public class Rizzlords_Autonomous extends LinearOpMode {
     private double handOpen;
     private double handClosed;
 
+
+
+
+
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
      */
