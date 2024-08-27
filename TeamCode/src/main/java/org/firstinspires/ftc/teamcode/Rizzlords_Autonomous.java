@@ -59,6 +59,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import java.util.ArrayList;
 import java.util.List;
 
+// This part slightly changed due to having to define this class as autonomous.
 @Autonomous(name = "LEFT SIDE Rizzlords Autonomous", group = "Rizzlords")
 public class Rizzlords_Autonomous extends LinearOpMode {
 
@@ -120,6 +121,8 @@ public class Rizzlords_Autonomous extends LinearOpMode {
 
         /* Actually do something useful */
         waitForStart();
+        // Unlike TeleOp, Autonomous just calls a sequence of commands that do not repeat, which in this case
+        // was a function containing that sequence.
         RunSequence();
 
         telemetry.update();
@@ -142,12 +145,18 @@ public class Rizzlords_Autonomous extends LinearOpMode {
      * 3 - end right
      */
     private void RunSequence() {
+        // This travel function was how I defined the robot's omnidirection movement using input values.
+        // In this case the arguments where horizontal power, vertical power, rotational power, duration.
         Travel(0.3, 0, 0, 1.5);
 
         Travel(0, -0.3, 0, 3.5);
 
+        // Setting the arm preset was similar to the method described in the teleop class except 
+        // instead of checking for inputs from the controller the function accepts an argument
+        // as an integer and sets the robot arm position based on that input.
         FullArmPreset(2);
 
+        // This runtime object will allow you to provide timing for your autonomous code.
         runtime.reset();
         while (opModeIsActive() && (runtime.seconds() < 5)) {
             telemetry.addData("Path", "Leg 1: %4.1f S Elapsed", runtime.seconds());

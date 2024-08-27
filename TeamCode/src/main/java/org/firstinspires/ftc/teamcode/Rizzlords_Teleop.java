@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+// Import needed packages
 import android.media.Image;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -17,8 +18,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
+// Line 23 defines that this will run in TeleOp mode under the labelled name and group.
+// Make sure not to forget the "extends LinearOpMode" part in Line 24
 @TeleOp(name = "Rizzlords_Teleop", group = "Rizzlords")
 public class Rizzlords_Teleop extends LinearOpMode {
+
+    // Declare all your variables here
+    // This includes references to parts on the robot to anything you would like to store
+    // You can worry about assigning them later on
 
     //Drive Motors
     private DcMotor BottomLeft;
@@ -52,9 +59,14 @@ public class Rizzlords_Teleop extends LinearOpMode {
 
     IMU imu;
 
-
+    // The function below is where most of your coding will be at
     @Override
     public void runOpMode() throws InterruptedException {
+
+        // Assign the variables declared recently
+        // Variables that reference to hardware components on your robot are assigned with the function hardwareMap.get()
+        // The first argument is the type of hardware and the second is the name that you have assigned to that piece of hardware
+        // on the phone app.
 
         //Drive motors
         BottomLeft = hardwareMap.get(DcMotor.class, "Bottom Left");
@@ -84,6 +96,9 @@ public class Rizzlords_Teleop extends LinearOpMode {
         //AUTO VARS
         stageGlobal = -1;
 
+        // The below code is for some initialization for the "imu" that is built into the control hub.
+        // This is pretty cool because it can measure the orientation of the robot relative to it's original rotation.
+        // Feel free to google more about the imu if you ever need to use it for solving a particular problem.
         imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters myIMUparameters;
 
@@ -109,6 +124,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
 
         CurrRotation = 0;
 
+        // If any of the motors do not spin in a desired direction by default, use the "setDirection" method to reverse it
+        // This will be particularly useful for configuring your wheels to work with omnidirectional movement
         BottomLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         TopRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -116,14 +133,22 @@ public class Rizzlords_Teleop extends LinearOpMode {
 
 //        TopLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 //        BottomRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // All of the code under the "if" and "while" statement is what is run over and over by the robot
         waitForStart();
         if (opModeIsActive()) {
             while (opModeIsActive()) {
+                // What I did here was call a bunch of functions that I declared later on to perform specific tasks.
+                // This may help a bit with organization.
+
                 //MANUAL
 //                WheelControl();
                 AbsoluteDrive();
 //                MecanumInput();
 //                MecanumInputRelative();
+
+                // Use "gamepad1.{some button from the list Android Studio pops up with}"
+                // to check if a button on the controller is pressed
                 if(!gamepad1.right_bumper && !gamepad1.left_bumper){
                     ArmControl();
                 }
@@ -132,6 +157,9 @@ public class Rizzlords_Teleop extends LinearOpMode {
                 HandControl();
                 PlaneControl();
                 HangControl();
+                
+                // The below function logs any information to the phone during runtime
+                // that will appear in a black box at the bottom of the app.
                 telemetry.addData("Hand Position", Hand.getPosition());
 
                 // Retrieve Rotational Angles and Velocities
@@ -163,6 +191,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
     }
 
+    // If you need to control a motor not by power but rather position, you need indicate it to run using encoder
     private void RunUsingEncoder(DcMotor motor){
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor.setTargetPosition(0);
@@ -173,6 +202,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
 
 
     //AUTO
+    // You can skim over this section if you'd like until I define a "MANUAL" section.
+    // Basically everything here is code of trying to simplify the controls for the player which didn't end up working out.
 
     /**
      * Describe this function...
@@ -219,6 +250,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
 //        }
 //    }
 
+    // This function served to set both the arm and forearm to a desired position by calling two other functions that
+    // set the specific arm position based on the input preset (defined by an integer).
     private void FullArmPreset(int preset){
         ArmControlPreset(preset);
         ForeArmControlPreset(preset);
@@ -242,6 +275,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
         sleep(100);
     }
 
+    // Controls robot hanging mechanism
     private void HangControl(){
         int raised = 0;
         int retracted = 0;
@@ -253,6 +287,7 @@ public class Rizzlords_Teleop extends LinearOpMode {
             sleep(250);
         }
     }
+
     private void ArmControlPreset(int position) {
         Arm.setPower(encoderPower);
         switch (position) {
@@ -341,7 +376,11 @@ public class Rizzlords_Teleop extends LinearOpMode {
 
 
 
-    //MANUAL
+    // MANUAL   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    // An issue we encountered was that the arm motor would "forget" it's initial position.
+    // It was a bit annoying having to adjust the motor everytime using the "ResetEncoder" class so
+    // this function was just to do it while running the teleop code.
     private void TuneResetEncoder(){
         if(gamepad1.right_bumper){
             armEncoder += 1;
@@ -355,6 +394,10 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
         Arm.setTargetPosition(armEncoder);
     }
+
+
+    // The functions "ArmControl" and "ForeArmControl" serve to set the arm and forearm to a desired position
+    // based on which dpad direction was pressed.
 
     // arm/forearm control notes
     // top - default
@@ -409,6 +452,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
 //        }
     }
 
+    // This function allowed the player to toggle the hand between open and closed when they would
+    // press the "A" button on the controller.
     private void HandControl(){
         if(gamepad1.a){
             Hand.setPosition(Hand.getPosition() == handOpen ? handClosed : handOpen);
@@ -417,6 +462,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
     }
 
+    // This function served to launch our paper plane by opening a servo that would let loose an elastic band
+    // after the player presses the button "B"
     private void PlaneControl(){
         if(gamepad1.b){
             PlaneServo.setPosition(PlaneServo.getPosition() == planeLoad ? planeClosed : planeLoad);
@@ -425,61 +472,8 @@ public class Rizzlords_Teleop extends LinearOpMode {
         }
     }
 
-//    private void AbsoluteDrive(){
-//        double vertical;
-//        double horizontal;
-//        double pivot;
-//        TopRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        BottomRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        TopLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        BottomLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//
-//        double speedDiv;
-//        if(gamepad1.left_trigger > 0){
-//            speedDiv = 1;
-//        } else if(gamepad1.right_trigger > 0){
-//            speedDiv = 0.3;
-//        } else {
-//            speedDiv = 0.5;
-//        }
-//
-//        double speedI = gamepad1.left_stick_y;
-//        double turnI = gamepad1.left_stick_x;
-//        double strafe = -gamepad1.right_stick_x;
-//
-//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-//        double currRot = orientation.getYaw(AngleUnit.RADIANS);
-//        double theta = currRot - refAng;
-//        double speed = speedI * Math.cos(Math.PI/2 - theta) + turnI * Math.sin(theta);
-//        double turn = turnI * Math.cos(theta) + speed * Math.sin(Math.PI/2 - theta);
-//
-//        if(speed > 1){
-//            speed = speedI * Math.cos(Math.PI/2 - theta) - turnI * Math.sin(theta);
-//        }
-//
-//        if(turn > 1){
-//            turn = turnI * Math.cos(theta) - speed * Math.sin(Math.PI/2 - theta);
-//        }
-//
-//        telemetry.addData("speed", speed);
-//        telemetry.addData("strafe", turn);
-//
-//        double topLeft = speed + turn + strafe;
-//        double topRight = speed - turn - strafe;
-//        double bottomLeft = speed + turn - strafe;
-//        double bottomRight = speed - turn + strafe;
-//
-//        TopRight.setPower(speedDiv * topRight);
-//        BottomRight.setPower(speedDiv * bottomRight);
-//        TopLeft.setPower(speedDiv * topLeft);
-//        BottomLeft.setPower(speedDiv * bottomLeft);
-//
-////        telemetry.addData("BottomLeft", bottomLeft);
-////        telemetry.addData("TopRight", topRight);
-////        telemetry.addData("TopLeft", topLeft);
-////        telemetry.addData("bottomRight", bottomRight);
-//    }
-
+    // This was an attempt to use the IMU built into the control hub to drive the robot with directionality relative
+    // to the player. I remember it worked for a few matches but broke down afterwards for some reason I never figured out.
     private void AbsoluteDrive(){
         double vertical;
         double horizontal;
@@ -537,15 +531,25 @@ public class Rizzlords_Teleop extends LinearOpMode {
 //        telemetry.addData("bottomRight", bottomRight);
     }
 
+
+    // This was the main function I used for omnidirectional drive. Note that this version makes it so that if the
+    // player tells the robot to go forward, it goes forward relative to the robot and not the player.
+    // I'll try my best to provide solid comments in this function, but I suggest checking out the following 2
+    // youtube videos because they explain it very well.
+    // https://youtu.be/gnSW2QpkGXQ?si=vkYwZCwndqOuL_L2   https://youtu.be/cXrDz1cb8N0?si=3_HsP2rzObhypDF6
     private void WheelControl() {
         double vertical;
         double horizontal;
         double pivot;
+
+        // Ensure the motors are not using encoder.
         TopRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         BottomRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         TopLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         BottomLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        // The variable "speedDiv" served to control the power of the drive, where if the player held down
+        // left trigger, the robot would go faster, and vice versa with right trigger
         double speedDiv;
         if(gamepad1.left_trigger > 0){
             speedDiv = 1;
@@ -555,15 +559,20 @@ public class Rizzlords_Teleop extends LinearOpMode {
             speedDiv = 0.5;
         }
 
+        // Declare speed "forward/backward", turn "clockwise/anticlockwise", and strafe "left/right"
         double speed = gamepad1.left_stick_y;
         double turn = gamepad1.left_stick_x;
         double strafe = -gamepad1.right_stick_x;
 
+        // The code below does all the magic regarding omnidirectional drive. Note that I changed up the
+        // configuration below because the original one found in the videos didn't work, although I would suggest
+        // first testing out what is instructed by the videos and then playing around if there are issues.
         double topLeft = speed + turn + strafe;
         double topRight = speed - turn - strafe;
         double bottomLeft = speed + turn - strafe;
         double bottomRight = speed - turn + strafe;
 
+        // Set the wheels' powers based off of the variables.
         TopRight.setPower(speedDiv * topRight);
         BottomRight.setPower(speedDiv * bottomRight);
         TopLeft.setPower(speedDiv * topLeft);
@@ -575,6 +584,9 @@ public class Rizzlords_Teleop extends LinearOpMode {
         telemetry.addData("bottomRight", bottomRight);
     }
 
+    // If I remember correctly all the remaining functions were to use an alternative method of
+    // omnidirectional driving that I didn't stick to.
+    // Learn more about it in this timestamped video: https://youtu.be/gnSW2QpkGXQ?si=QPBge7rfSobD5yH7&t=78
     private void MecanumInput(){
         double y = gamepad1.left_stick_y;
         double turn = gamepad1.left_stick_x;
